@@ -1,0 +1,32 @@
+pipeline {
+  agent any
+
+  stages {
+    stage('Install Deps') {
+      steps {
+        sh 'pip install -r requirements.txt'
+      }
+    }
+
+    stage('Train Model') {
+      steps {
+        sh 'python src/train.py'
+      }
+    }
+
+    stage('Evaluate and Register') {
+      steps {
+        sh 'python src/evaluate.py'
+      }
+    }
+
+    stage('Build and Deploy') {
+      steps {
+        dir('serve') {
+          sh 'docker build -t iris-model-api .'
+          sh 'docker run -d -p 7001:7001 iris-model-api'
+        }
+      }
+    }
+  }
+}
