@@ -1,32 +1,38 @@
 pipeline {
-  agent any
+    agent any
 
-  stages {
-    stage('Install Deps') {
-      steps {
-        sh 'pip install -r requirements.txt'
-      }
+    environment {
+        VENV = 'venv'
     }
 
-    stage('Train Model') {
-      steps {
-        sh 'python src/train.py'
-      }
-    }
-
-    stage('Evaluate and Register') {
-      steps {
-        sh 'python src/evaluate.py'
-      }
-    }
-
-    stage('Build and Deploy') {
-      steps {
-        dir('serve') {
-          sh 'docker build -t iris-model-api .'
-          sh 'docker run -d -p 7001:7001 iris-model-api'
+    stages {
+        stage('Setup Environment') {
+            steps {
+                sh 'python3 -m venv $VENV'
+                sh './$VENV/bin/pip install --upgrade pip'
+                sh './$VENV/bin/pip install -r requirements.txt'
+            }
         }
-      }
+
+        stage('Train Model') {
+            steps {
+                sh './$VENV/bin/python src/train.py'
+            }
+        }
+
+        stage('Evaluate and Register') {
+            steps {
+                sh './$VENV/bin/python src/evaluate.py'
+            }
+        }
+
+        stage('Deploy Model API') {
+            steps {
+                dir('serve') {
+                    sh 'docker build -t iris-model-api .'
+                    sh 'docker run -d -p 7001:7001 iris-model-api || echo "Container already running"'
+                }
+            }
+        }
     }
-  }
 }
