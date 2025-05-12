@@ -3,4 +3,3 @@ uvicorn
 mlflow
 scikit-learn
 numpy
-python3-venv
